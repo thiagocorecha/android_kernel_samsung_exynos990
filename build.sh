@@ -65,9 +65,28 @@ if [ ! -f "$CLANG_DIR/bin/clang-14" ]; then
     rm -rf $CLANG_DIR
     mkdir -p $CLANG_DIR
     pushd $CLANG_DIR > /dev/null
-    curl -LJOk https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/tags/android-13.0.0_r13/clang-r450784d.tar.gz
-    tar xf android-13.0.0_r13-clang-r450784d.tar.gz
-    rm android-13.0.0_r13-clang-r450784d.tar.gz
+    URL="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/tags/android-13.0.0_r13/clang-r450784d.tar.gz"
+    for attempt in 1 2 3 4 5; do
+        echo "Download attempt $attempt..."
+        curl -L --fail --retry 5 --retry-all-errors --retry-delay 5 -o clang.tar.gz "$URL" || true
+        if [ -f clang.tar.gz ] && gzip -t clang.tar.gz 2>/dev/null; then
+            echo "Toolchain archive downloaded and verified OK (attempt $attempt)"
+            break
+        fi
+        echo "Archive missing or corrupted, retrying..."
+        rm -f clang.tar.gz
+        sleep 5
+    done
+    if [ ! -f clang.tar.gz ]; then
+        echo "ERROR: Failed to download toolchain after multiple attempts"
+        exit 1
+    fi
+    tar xf clang.tar.gz
+    rm clang.tar.gz
+    if [ ! -f "$CLANG_DIR/bin/clang-14" ]; then
+        echo "ERROR: Toolchain extraction incomplete (clang-14 missing)"
+        exit 1
+    fi
     echo "Cleaning up..."
     popd > /dev/null
 fi
