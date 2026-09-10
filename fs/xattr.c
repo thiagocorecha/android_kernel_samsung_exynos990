@@ -366,6 +366,11 @@ vfs_getxattr(struct dentry *dentry, const char *name, void *value, size_t size)
 	if (error)
 		return error;
 
+#ifdef CONFIG_NOMOUNT
+	{ extern bool vfs_nomount_xattr_hidden(const struct inode *inode);
+	  if (vfs_nomount_xattr_hidden(inode)) return -ENOENT; }
+#endif
+
 	if (!strncmp(name, XATTR_SECURITY_PREFIX,
 				XATTR_SECURITY_PREFIX_LEN)) {
 		const char *suffix = name + XATTR_SECURITY_PREFIX_LEN;
@@ -397,6 +402,11 @@ vfs_listxattr(struct dentry *dentry, char *list, size_t size)
 	error = security_inode_listxattr(dentry);
 	if (error)
 		return error;
+#ifdef CONFIG_NOMOUNT
+	{ extern bool vfs_nomount_xattr_hidden(const struct inode *inode);
+	  if (vfs_nomount_xattr_hidden(inode)) return -ENOENT; }
+#endif
+
 	if (inode->i_op->listxattr && (inode->i_opflags & IOP_XATTR)) {
 		error = inode->i_op->listxattr(dentry, list, size);
 	} else {

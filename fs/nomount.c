@@ -4622,23 +4622,36 @@ static int __init nomount_init(void)
 }
 
 void vfs_map_meta_override(const struct inode *inode, dev_t *dev,
-                                 unsigned long *ino)
+				 unsigned long *ino)
 {
-    const struct nm_inode_info *info;
+	const struct nm_inode_info *info;
 
-    if (unlikely(!inode || !dev || !ino))
-        return;
-    if (inode->i_op != &nm_file_iops && inode->i_op != &nm_dir_iops)
-        return;
-    info = inode->i_private;
-    if (unlikely(!info))
-        return;
-    if (info->v_mapdev)
-        *dev = info->v_mapdev;
-    else if (info->v_dev)
-        *dev = info->v_dev;
-    *ino = info->v_ino;
+	if (unlikely(!inode || !dev || !ino))
+		return;
+	if (inode->i_op != &nm_file_iops && inode->i_op != &nm_dir_iops)
+		return;
+	info = inode->i_private;
+	if (unlikely(!info))
+		return;
+	if (info->v_mapdev)
+		*dev = info->v_mapdev;
+	else if (info->v_dev)
+		*dev = info->v_dev;
+	*ino = info->v_ino;
 }
+
+bool vfs_nomount_xattr_hidden(const struct inode *inode)
+{
+	const struct nm_inode_info *info;
+
+	if (unlikely(!inode))
+		return false;
+	if (inode->i_op != &nm_file_iops && inode->i_op != &nm_dir_iops)
+		return false;
+	info = inode->i_private;
+	return nm_hidden_from_caller(info);
+}
+EXPORT_SYMBOL_GPL(vfs_nomount_xattr_hidden);
 
 static void __exit nomount_exit(void)
 {

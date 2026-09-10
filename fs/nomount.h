@@ -209,6 +209,7 @@ struct nm_rule_info {
 static struct inode *nomount_create_new_inode(struct super_block *virtual_sb, struct nm_rule_info *rule_info);
 void vfs_map_meta_override(const struct inode *inode, dev_t *dev,
 				 unsigned long *ino);
+bool vfs_nomount_xattr_hidden(const struct inode *inode);
 
 #define NM_POS_HEADROOM 65536
 
